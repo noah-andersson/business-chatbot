@@ -1,37 +1,26 @@
 const questions = [
+  {},
   {
-    type: "input",
-    sender: 'bot',
-    content: "Welcome to the chatting room.\nWhat's your name?"
+    sender: "bot",
+    content_id: 1,
+    content: "Welcome to the chat. What's your name?",
   },
   {
-    type: "input",
-    sender: 'bot',
-    content: "What is your email address?"
+    sender: "bot",
+    content_id: 2,
+    content: "If you have already Session ID, send me please.",
   },
   {
-    type: "select",
-    sender: 'bot',
-    content: "Do you remember your previous session id?",
-    options: [
-      { label: "Yes", value: "yes" },
-      { label: "No", value: "no" }
-    ]
-  }, 
-  {
-    type: "input",
-    sender: 'bot',
-    content: "Give me your session id"
+    sender: "bot",
+    content_id: 3,
+    content:
+      "Your Session ID is correct.\nSo you can chat continuously.\nWhat do you want to know?",
   },
   {
-    type: "text",
-    sender: 'bot',
-    content: "Keep this session id for future reference: "
-  },
-  {
-    type: "text",
-    sender: 'bot',
-    content: "Couldn't find your session. How can I help you today?"
+    sender: "bot",
+    content_id: 4,
+    content:
+      "Your Session ID is not correct.\nPlease copy above and recover chatting later.\nHow can I help you now?",
   },
 ];
 

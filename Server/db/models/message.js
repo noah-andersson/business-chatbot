@@ -1,30 +1,21 @@
 const mongoose = require('mongoose');
 
 const messageSchema = new mongoose.Schema({
+  sessionId: {
+    type: String,
+    required: true
+  },
   sender: {
     type: String,
+    required: true
+  },
+  content_id: {
+    type: Number,
     required: true
   },
   content: {
     type: String,
     required: true
-  },
-  type: {
-    type: String,
-    required: true
-  },
-  options: {
-    type: Array,
-    default: []
-  },
-
-  sessionId: {
-    type: String,
-    required: true
-  },
-  time: {
-    type: Date,
-    default: Date.now
   },
   timestamp: {
     type: Date,

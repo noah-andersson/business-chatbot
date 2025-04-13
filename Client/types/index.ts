@@ -24,8 +24,7 @@ export interface Question {
 
 export interface Message {
   sender: string;
-  type: string;
+  content_id: number;
   content: string;
   time?: number;
-  options?: { label: string; value: string }[];
 }
