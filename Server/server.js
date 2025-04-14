@@ -10,6 +10,8 @@ const { questions } = require("./lib/questions");
 const ChatSession = require("./db/models/chat");
 const Message = require("./db/models/message");
 
+const { isBookingCheck, isBookingAnswer } = require("./utils/isBookingCheck");
+
 dotenv.config();
 
 const app = express();
@@ -51,6 +53,7 @@ io.on("connection", async (socket) => {
   await saveMessage(questions[1], hash);
   socket.emit("response", questions[1]);
 
+  let is_booking_state = false;
   // Send message with user and bot
   socket.on("message", async (userMessage) => {
     try {
@@ -96,15 +99,64 @@ io.on("connection", async (socket) => {
 
         // Main Chatting
         default:
-          // Query OpenAI for a response
-          const aiMessage = await sendMessageToOpenAI(userMessage.content);
+          if (isBookingCheck(userMessage.content)) {
+            botMessage = questions[5];
+            botMessage = {
+              ...botMessage,
+              content_id: userMessage.content_id + 1,
+            };
+            is_booking_state = true;
+            socket.emit("response", botMessage);
+            await saveMessage(questions[5], hash);
+          } else if (is_booking_state === true) {
+            const is_booking_answer = isBookingAnswer(userMessage);
+            
+            
+            if (is_booking_answer.result === true) {
+              botMessage = questions[6];
+              botMessage = {
+                ...botMessage,
+                content_id: userMessage.content_id + 1,
+              };
+              socket.emit("response", botMessage);
+              await saveMessage(questions[6], hash);
+              is_booking_state = is_booking_answer.is_booking_state;
 
-          var message = {content_id: userMessage.content_id + 1, sender: "bot", content: aiMessage };
+            } else if (is_booking_answer.is_booking_state === false) {
+              botMessage = questions[7];
+              botMessage = {
+                ...botMessage,
+                content_id: userMessage.content_id + 1,
+              };
+              socket.emit("response", botMessage);
+              await saveMessage(questions[7], hash);
+              is_booking_state = is_booking_answer.is_booking_state;
 
-          // Add AI response to session history
-          await saveMessage(message, chatSessions[socket.id].sessionId);
-          // Send AI response back to the user
-          socket.emit("response", message);
+            } else {
+              botMessage = questions[8];
+              botMessage = {
+                ...botMessage,
+                content_id: userMessage.content_id + 1,
+              };
+              socket.emit("response", botMessage);
+              await saveMessage(questions[8], hash);
+              is_booking_state = is_booking_answer.is_booking_state;
+            }
+          } else {
+            // Query OpenAI for a response
+            const aiMessage = await sendMessageToOpenAI(userMessage.content);
+
+            let message = {
+              content_id: userMessage.content_id + 1,
+              sender: "bot",
+              content: aiMessage,
+            };
+
+            // Add AI response to session history
+            await saveMessage(message, chatSessions[socket.id].sessionId);
+            // Send AI response back to the user
+            socket.emit("response", message);
+          }
           break;
       }
     } catch (error) {

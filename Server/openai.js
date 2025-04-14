@@ -62,10 +62,8 @@ const sendMessageToOpenAI = async (message) => {
     3. Use emojis sparingly but effectively to emphasize key points
     4. Keep responses concise but informative`
 
-    console.log(`Sending message to DeepAI: ${message}`);
-
     const response = await openai.chat.completions.create({
-      model: process.env.OPENAI_API_TOKEN,
+      model: "gpt-4-1106-preview",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: message }
@@ -74,7 +72,6 @@ const sendMessageToOpenAI = async (message) => {
       max_tokens: 2000,
     });
     const content = response.choices[0]?.message?.content;
-    console.log(content)
     return content
   } catch (error) {
     console.error('Error sending message to OpenAI:', error);
