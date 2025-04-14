@@ -24,7 +24,7 @@ const ChatBot = () => {
     socketRef.current.on("response", (response: any) => {
       setMessages((prev) => [...prev, { ...response, time: Date.now() }]);
       setTyping(false);
-    });
+    });    
 
     // Close socket connection on component unmount
     return () => {

@@ -1,21 +1,24 @@
 const mongoose = require('mongoose');
 
-const messageSchema = new mongoose.Schema({
-  sessionId: {
+const petitionSchema = new mongoose.Schema({
+  userName: {
     type: String,
     required: true
   },
-  sender: {
+  userEmail: {
     type: String,
     required: true
   },
-  content_id: {
-    type: Number,
+  userCity: {
+    type: String,
+    required: true
+  },
+  branchOffice: {
+    type: String,
     required: true
   },
   content: {
     type: String,
-    required: true
   },
   timestamp: {
     type: Date,
@@ -23,6 +26,6 @@ const messageSchema = new mongoose.Schema({
   }
 });
 
-const Message = mongoose.model('Message', messageSchema);
+const Petition = mongoose.model('petitions', petitionSchema);
 
-module.exports = Message;
+module.exports = Petition;

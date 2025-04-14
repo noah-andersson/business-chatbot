@@ -19,6 +19,6 @@ const chatSessionSchema = new mongoose.Schema({
   }
 });
 
-const ChatSession = mongoose.model('ChatSession', chatSessionSchema);
+const ChatSession = mongoose.model('chatsessions', chatSessionSchema);
 
 module.exports = ChatSession;

@@ -1,43 +1,43 @@
-const express = require("express");
-const { Server } = require("socket.io");
 const { createServer } = require("http");
+const { Server } = require("socket.io");
+const express = require("express");
 const dotenv = require("dotenv");
 const mongoose = require("mongoose");
-const { sendMessageToOpenAI } = require("./openai");
-const dbconfig = require("./db/config");
 const crypto = require("crypto");
-const { questions } = require("./lib/questions");
-const ChatSession = require("./db/models/chat-session");
-const Message = require("./db/models/message");
-
-const { isBookingCheck } = require("./utils/isBookingCheck");
-
-dotenv.config();
+const Message = require("./model/Message");
+const { saved_questions } = require("./lib/saved_questions");
+const {
+  initialAsking,
+  isPetition,
+  petitionAsking,
+  mainPetition,
+  aiAnswer,
+} = require("./utils/answer_user");
 
 const app = express();
+dotenv.config();
 
-mongoose.connect(dbconfig.db_url);
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB Connected"))
+  .catch((err) => console.log("MongoDB Connection Error: ", err));
 
 const server = createServer(app);
+
 const io = new Server(server, {
   cors: {
     origin: "*",
   },
 });
 
-const saveMessage = async (message, hash) => {
-  const message_obj = await Message.create({
-    sessionId: hash,
-    time: new Date(),
-    ...message,
-  });
-  await message_obj.save();
-};
-
-io.on("connection", async (socket) => {
+io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
   const chatSessions = {};
-  const newUser = {};
+  chatSessions[socket.id] = socket;
+
+  let bot_question = null;
+  let is_petition = false;
+  let petition_list_count = 1;
 
   // Create a new chat session for each user
   const hash = parseInt(
@@ -45,94 +45,41 @@ io.on("connection", async (socket) => {
     16
   ).toString(10);
 
-  socket.emit("response", questions[1]);
+  socket.emit("response", saved_questions[1]);
 
   // Send message with user and bot
   socket.on("message", async (userMessage) => {
     try {
-      let botMessage = {};
+      // If bot asks user
+      if (userMessage.content_id < 1) {
+        bot_question = await initialAsking(userMessage, hash);
+        socket.emit("response", bot_question);
 
-      // About the initial questions
-      switch (userMessage.content_id) {
-        // 3 Initial Questions + (-2)
-        case -2:
-          newUser.userName = userMessage.content;
-          botMessage = questions[2];
-          botMessage = {
-            ...botMessage,
-            content: `Hi ${userMessage.content}, nice to meet you!\n${botMessage.content}`,
-          };
-          socket.emit("response", botMessage);
-          // await saveMessage(botMessage, hash);
-          break;
-        case -1:
-          newUser.userEmail = userMessage.content;
-          botMessage = questions[3];
-          botMessage = {
-            ...botMessage,
-            content: `Good. I have received your name and email address.\n${botMessage.content}`,
-          };
-          socket.emit("response", botMessage);
-          break;
-
-        case 0:
-          const all_previous_messages = await Message.find({
+        // If Existing SessionIS
+        if (bot_question.content_id === 4) {
+          const previous_messages = await Message.find({
             sessionId: userMessage.content,
           });
-          // New User
-          if (all_previous_messages.length === 0) {
-            newUser.sessionId = hash;
-            botMessage = questions[5];
-            botMessage = {
-              ...botMessage,
-              content: hash + "\n" + botMessage.content,
-            };
-            socket.emit("response", botMessage);
-            
-            // Create NewChatSession
-            const newChatSession = new ChatSession(newUser);
-            await newChatSession.save();
-          }
-          // Session ID exists
-          else {
-            socket.emit("response", questions[4]);
-            // await saveMessage(questions[4], hash);
-
-            all_previous_messages.map((previous_message) => {
-              socket.emit("response", previous_message);
-            });
-          }
-          break;
-
-        // Main Chatting
-        default:
-          // Saving user's message
-          await saveMessage(userMessage, hash);
-
-          if (isBookingCheck(userMessage.content)) {
-            botMessage = questions[6];
-            botMessage = {
-              ...botMessage,
-              content_id: userMessage.content_id,
-            };
-            socket.emit("response", botMessage);
-            await saveMessage(botMessage, hash);
-          } else {
-            // Query OpenAI for a response
-            const aiMessage = await sendMessageToOpenAI(userMessage.content);
-
-            botMessage = {
-              content_id: userMessage.content_id,
-              sender: "bot",
-              content: aiMessage,
-            };
-
-            // Add AI response to session history
-            await saveMessage(botMessage, hash);
-            // Send AI response back to the user
-            socket.emit("response", botMessage);
-          }
-          break;
+          previous_messages.map((previous_message) => {
+            socket.emit("response", previous_message);
+          });
+        }
+      }
+      // If user wants petition
+      else if (isPetition(userMessage.content)) {
+        bot_question = await petitionAsking(userMessage, hash);
+        socket.emit("response", bot_question);
+        is_petition = true;
+      }
+      // If petition is started
+      else if (is_petition) {
+        bot_question = await mainPetition({...userMessage, content_id: petition_list_count ++}, hash);
+        socket.emit("response", bot_question);
+      }
+      // If user asks bot
+      else {
+        bot_question = await aiAnswer(userMessage, hash);
+        socket.emit("response", bot_question);
       }
     } catch (error) {
       console.error("Error querying OpenAI:", error);
