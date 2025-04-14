@@ -11,7 +11,7 @@ const ChatBot = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [open, setOpen] = useState<boolean>(true);
   const [typing, setTyping] = useState<boolean>(false);
-  const [contentId, setContentId] = useState<number>(1);
+  const [contentId, setContentId] = useState<number>(-2);
 
   const socketRef = useRef<any>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -82,8 +82,8 @@ const ChatBot = () => {
     <span className={styles.chatBot}>
       <div
         style={{
-          height: open ? 800 : 0,
-          width: open ? 600 : 0,
+          width: open ? 500 : 0,
+          height: open ? 600 : 0,
           opacity: open ? 1 : 0,
           transition: `opacity 300ms ease-out`,
         }}

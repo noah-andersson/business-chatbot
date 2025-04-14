@@ -1,13 +1,21 @@
 const mongoose = require('mongoose');
 
 const chatSessionSchema = new mongoose.Schema({
-  time: {
-    type: Date,
-    default: Date.now
+  userName: {
+    type: String,
+    required: true
+  },
+  userEmail: {
+    type: String,
+    required: true
   },
   sessionId: {
     type: String,
     required: true
+  },
+  time: {
+    type: Date,
+    default: Date.now
   }
 });
 
