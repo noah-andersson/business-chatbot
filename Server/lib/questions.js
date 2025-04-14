@@ -22,26 +22,32 @@ const questions = [
     content:
       "Your Session ID is not correct.\nPlease copy above and recover chatting later.\nHow can I help you now?",
   },
+
   {
     sender: "bot",
     content_id: 5,
-    content: "Are you booking now?\nIf you agree please 'yes' or not 'no'",
+    content: "I think you are booking now.\nSelect your city.",
   },
-  {
-    sender: "bot",
-    content_id: 6,
-    content: "Booking Start!",
-  },
-  {
-    sender: "bot",
-    content_id: 7,
-    content: "It's okay. Go on.",
-  },
-  {
-    sender: "bot",
-    content_id: 8,
-    content: "If you agree please 'yes' or not 'no'", 
-  },
+  // {
+  //   sender: "bot",
+  //   content_id: 5,
+  //   content: "Are you booking now?\nIf you agree please 'yes' or not 'no'",
+  // },
+  // {
+  //   sender: "bot",
+  //   content_id: 6,
+  //   content: "Booking Start!",
+  // },
+  // {
+  //   sender: "bot",
+  //   content_id: 7,
+  //   content: "It's okay. Go on.",
+  // },
+  // {
+  //   sender: "bot",
+  //   content_id: 8,
+  //   content: "If you agree please 'yes' or not 'no'",
+  // },
 ];
 
 module.exports = { questions };
