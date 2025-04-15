@@ -4,6 +4,7 @@ import TextareaAutosize from "react-textarea-autosize";
 import io from "socket.io-client";
 import { Message } from "@/types";
 import MessageView from "../Message";
+import OptionView from "../Option";
 
 const ChatBot = () => {
   const [idleTime, setIdleTime] = useState<number>(0);
@@ -90,8 +91,8 @@ const ChatBot = () => {
     <span className={styles.chatBot}>
       <div
         style={{
-          width: open ? 500 : 0,
-          height: open ? 600 : 0,
+          width: open ? 600 : 0,
+          height: open ? 800 : 0,
           opacity: open ? 1 : 0,
           transition: `opacity 300ms ease-out`,
         }}
@@ -112,9 +113,27 @@ const ChatBot = () => {
           </button>
         </div>
         <div id="chat-list-body" className={styles.body}>
-          {messages.map((message: Message, index: number) => (
+          {/* {messages.map((message: Message, index: number) => (
             <MessageView key={index} {...message} />
-          ))}
+          ))} */}
+          {messages.map((message: Message, index: number) =>
+            message.type === "select" && message.sender === "bot" ? (
+              <div key={index}>
+                <MessageView key={index + "message"} {...message} />
+                <OptionView
+                  key={index + "options"}
+                  onSelect={(option: string) => {
+                    onSend(option);
+                  }}
+                  selected={[]}
+                  options={message.options ?? []}
+                  {...message}
+                />
+              </div>
+            ) : (
+              <MessageView key={index} {...message} />
+            )
+          )}
         </div>
 
         {/* Deleting Section */}

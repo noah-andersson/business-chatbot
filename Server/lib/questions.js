@@ -43,11 +43,11 @@ const basic_questions = [
   {
     id: 6,
     sender: "bot",
-    type: "button",
+    type: "select",
     label: "is_booking",
     content: "I think you are booking now, aren't you?",
     options: [
-      { label: "Yes I am booking", value: "yes" },
+      { label: "Yes, I am booking.", value: "yes" },
       { label: "No, I won't.", value: "no" }
     ]
   },

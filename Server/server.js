@@ -50,8 +50,8 @@ io.on("connection", (socket) => {
   // Send message with user and bot
   socket.on("message", async (userMessage) => {
     try {
-      // If bot asks user
       if (userMessage.id <= 3) {
+        // If bot asks user for name and email
         bot_question = await initialAsking(userMessage, hash);
         socket.emit("response", bot_question);
 
@@ -65,21 +65,19 @@ io.on("connection", (socket) => {
           });
         }
       }
-
-      // // If user wants petition
-      // else if (isPetition(userMessage.content)) {
-      //   bot_question = await petitionAsking(userMessage, hash);
-      //   socket.emit("response", bot_question);
-      //   is_petition = true;
-      // } 
-      // // If petition is started
-      // else if (is_petition) {
-      //   [bot_question, bot_selection] = await mainPetition({...userMessage, content_id: petition_list_count ++}, hash);
-      //   socket.emit("response", bot_question);
-      //   socket.emit("response-selection", bot_selection);
-      // }
-      // // If user asks bot
+      else if (!is_petition && isPetition(userMessage.content)) {
+        // Asking user for petition
+        bot_question = await petitionAsking(userMessage, hash);
+        socket.emit("response", bot_question);
+      } 
+      else if ((userMessage.label === "is_booking" && userMessage.content === "yes") || is_petition ) {
+        // If user wants petition
+        is_petition = true;
+        bot_question = await mainPetition(userMessage, hash);
+        socket.emit("response", bot_question);
+      }
       else {
+        // ChatGPT Working
         bot_question = await aiAnswer(userMessage, hash);
         socket.emit("response", bot_question);
       }

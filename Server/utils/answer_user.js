@@ -3,7 +3,7 @@ const ChatSession = require("../model/ChatSession");
 const Message = require("../model/Message");
 const Petition = require("../model/Petition");
 const { basic_questions } = require("../lib/questions.js");
-const { catalogCities } = require("../api/petition.js");
+const { catalogCities, catalogBranchOffices } = require("../api/petition.js");
 
 let botMessage = {};
 let botSelection = {};
@@ -62,7 +62,7 @@ const initialAsking = async (userMessage, hash) => {
 };
 
 const isPetition = (userMessage) => {
-  const promiseWords = [
+  const promise_words = [
     "petition",
     "book",
     "reservation",
@@ -72,85 +72,59 @@ const isPetition = (userMessage) => {
     "assign",
     "engage",
   ];
-  let booking_state = false;
-  promiseWords.map((promiseWord) => {
-    if (userMessage.toLowerCase().includes(promiseWord)) {
-      booking_state = true;
+  let state = false;
+  promise_words.map((promise_word) => {
+    if (userMessage.toLowerCase().includes(promise_word)) {
+      state = true;
     }
   });
-  return booking_state;
+  return state;
 };
 
 const petitionAsking = async (userMessage, hash) => {
-  try {
-    const res = await catalogCities();
-
-    botSelection = {
-      ...saved_selections[1],
-      options: res.data,
-    };
-
-    botMessage = {
-      ...basic_questions[6],
-      content_id: userMessage.content_id,
-    };
-    await saveMessage(userMessage, hash);
-    await saveMessage(botMessage, hash);
-    return [botMessage, botSelection];
-  } catch (e) {
-    return {
-      sender: "bot",
-      content_id: 6,
-      content: "Something went wrong while fetching cities data",
-    };
-  }
-};
-
-let new_petition = {
-  userName: "",
-  userEmail: "",
-  userCity: "",
-  branchOffice: "",
-  content: "",
+  botMessage = basic_questions[6];
+  botMessage = {
+    ...botMessage,
+    id: userMessage.id,
+  };
+  await saveMessage(userMessage, hash);
+  await saveMessage(botMessage, hash);
+  return botMessage;
 };
 
 const mainPetition = async (userMessage, hash) => {
-  await saveMessage(userMessage, hash);
-  switch (userMessage.content_id) {
-    case 1:
-      new_petition.userCity = userMessage.content;
-      botMessage = basic_questions[7];
+  switch (userMessage.label) {
+    case "is_booking":
+      const res_city = await catalogCities();
+      const city_list = [];
+      res_city.data.map((city) => {
+        city_list.push({ label: city, value: city });
+      });
       botMessage = {
-        ...botMessage,
-        content_id: userMessage.content_id + 1,
+        ...basic_questions[7],
+        options: city_list.slice(1),
       };
-      await saveMessage(botMessage, hash);
       break;
-    case 2:
-      new_petition.branchOffice = userMessage.content;
-      botMessage = basic_questions[8];
-      botMessage = {
-        ...botMessage,
-        content_id: userMessage.content_id + 1,
-      };
-      await saveMessage(botMessage, hash);
-      break;
-    case 3:
-      new_petition.content = userMessage.content;
-      botMessage = basic_questions[9];
-      botMessage = {
-        ...botMessage,
-        content_id: userMessage.content_id + 1,
-      };
-      // Create NewChatSession
-      new_petition.userName = newUser.userName;
-      new_petition.userEmail = newUser.userEmail;
-      const newPetition = new Petition(new_petition);
-      await newPetition.save();
 
-      await saveMessage(botMessage, hash);
+    case "user_city":
+      const res_office = await catalogBranchOffices()
+      const office_list = [];
+      res_office.data.filter((item) => 
+        item.city === userMessage.content
+      ).map((item) => {
+        item.departments.map((item) => {
+          office_list.push({ label: item.name, value: item.name });
+        })
+      })
+      botMessage = {
+        ...basic_questions[8],
+        options: office_list,
+      };
       break;
   }
+
+  await saveMessage(userMessage, hash)
+  await saveMessage(botMessage, hash);
   return botMessage;
 };
 
@@ -164,7 +138,7 @@ const aiAnswer = async (userMessage, hash) => {
     type: "text",
     label: "ai_answer",
     content: aiMessage,
-    options: []
+    options: [],
   };
   // Add AI response to session history
   await saveMessage(botMessage, hash);

@@ -28,6 +28,12 @@ export interface Message {
   type: string;
   label?: string;
   content: string;
-  options?: string[];
+  options?: { label: string, value: string }[];
   time?: number;
+}
+
+export interface Option {
+  options: { label: string, value: string }[];
+  onSelect: (option: string) => void;
+  selected: string[];
 }

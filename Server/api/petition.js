@@ -27,7 +27,7 @@ const catalogCities = async () => {
 const catalogBranchOffices = async () => {
   try {
     const response = await axios.post(
-      `${API_URL}/catalog/branchOffices`,
+      `https://devcoreservicesfna.customersolutions.click/api/v1/catalog/branchOffices`,
       {},
       AUTH_HEADER
     );
