@@ -1,6 +1,6 @@
 "use client";
 
-import ChatBot from "@/components/chat-bot";
+import ChatBot from "@/components/ChatBot";
 
 export default function Home() {
   return (

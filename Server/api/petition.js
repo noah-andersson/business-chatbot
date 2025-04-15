@@ -14,7 +14,7 @@ const AUTH_HEADER = {
 const catalogCities = async () => {
   try {
     const response = await axios.post(
-      `${API_URL}/catalog/cities`,
+      `https://devcoreservicesfna.customersolutions.click/api/v1/catalog/cities`,
       {},
       AUTH_HEADER
     );

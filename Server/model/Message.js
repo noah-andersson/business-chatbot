@@ -5,17 +5,27 @@ const messageSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  id: {
+    unique: true,
+    type: Number,
+  },
   sender: {
     type: String,
     required: true
   },
-  content_id: {
-    type: Number,
+  type: {
+    type: String,
     required: true
+  },
+  label: {
+    type: String,
   },
   content: {
     type: String,
     required: true
+  },
+  options: {
+    type: [String],
   },
   timestamp: {
     type: Date,

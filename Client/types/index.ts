@@ -23,8 +23,11 @@ export interface Question {
 }
 
 export interface Message {
+  id?: number;
   sender: string;
-  content_id: number;
+  type: string;
+  label?: string;
   content: string;
+  options?: string[];
   time?: number;
 }

@@ -5,7 +5,7 @@ const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const crypto = require("crypto");
 const Message = require("./model/Message");
-const { saved_questions } = require("./lib/saved_questions");
+const { basic_questions } = require("./lib/questions");
 const {
   initialAsking,
   isPetition,
@@ -32,31 +32,31 @@ const io = new Server(server, {
 
 io.on("connection", (socket) => {
   console.log("A user connected:", socket.id);
-  const chatSessions = {};
-  chatSessions[socket.id] = socket;
+
+  const chat_sessions = {};
+  chat_sessions[socket.id] = socket;
 
   let bot_question = null;
   let is_petition = false;
-  let petition_list_count = 1;
+  // let petition_list_count = 1;
 
   // Create a new chat session for each user
   const hash = parseInt(
     crypto.createHash("md5").update(socket.id).digest("hex").slice(0, 8),
     16
   ).toString(10);
-
-  socket.emit("response", saved_questions[1]);
+  socket.emit("response", basic_questions[1]);
 
   // Send message with user and bot
   socket.on("message", async (userMessage) => {
     try {
       // If bot asks user
-      if (userMessage.content_id < 1) {
+      if (userMessage.id <= 3) {
         bot_question = await initialAsking(userMessage, hash);
         socket.emit("response", bot_question);
 
-        // If Existing SessionIS
-        if (bot_question.content_id === 4) {
+        // If existing Session ID
+        if (bot_question.label === "session_id_correct") {
           const previous_messages = await Message.find({
             sessionId: userMessage.content,
           });
@@ -65,18 +65,20 @@ io.on("connection", (socket) => {
           });
         }
       }
-      // If user wants petition
-      else if (isPetition(userMessage.content)) {
-        bot_question = await petitionAsking(userMessage, hash);
-        socket.emit("response", bot_question);
-        is_petition = true;
-      }
-      // If petition is started
-      else if (is_petition) {
-        bot_question = await mainPetition({...userMessage, content_id: petition_list_count ++}, hash);
-        socket.emit("response", bot_question);
-      }
-      // If user asks bot
+
+      // // If user wants petition
+      // else if (isPetition(userMessage.content)) {
+      //   bot_question = await petitionAsking(userMessage, hash);
+      //   socket.emit("response", bot_question);
+      //   is_petition = true;
+      // } 
+      // // If petition is started
+      // else if (is_petition) {
+      //   [bot_question, bot_selection] = await mainPetition({...userMessage, content_id: petition_list_count ++}, hash);
+      //   socket.emit("response", bot_question);
+      //   socket.emit("response-selection", bot_selection);
+      // }
+      // // If user asks bot
       else {
         bot_question = await aiAnswer(userMessage, hash);
         socket.emit("response", bot_question);
@@ -90,7 +92,7 @@ io.on("connection", (socket) => {
   // Handle disconnection
   socket.on("disconnect", () => {
     console.log(`User ${socket.id} disconnected`);
-    delete chatSessions[socket.id]; // Cleanup session
+    delete chat_sessions[socket.id]; // Cleanup session
   });
 });
 

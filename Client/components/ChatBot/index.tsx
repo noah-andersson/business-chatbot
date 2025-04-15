@@ -3,15 +3,18 @@ import styles from "../../App.module.scss";
 import TextareaAutosize from "react-textarea-autosize";
 import io from "socket.io-client";
 import { Message } from "@/types";
-import MessageView from "../message";
+import MessageView from "../Message";
 
 const ChatBot = () => {
   const [idleTime, setIdleTime] = useState<number>(0);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const [bookingSelections, setBookingSelections] = useState<Selection[]>([]);
   const [open, setOpen] = useState<boolean>(true);
+  const [label, setLabel] = useState("");
+  const [type, setType] = useState("");
   const [typing, setTyping] = useState<boolean>(false);
-  const [contentId, setContentId] = useState<number>(-2);
+  const [questionId, setQuestionId] = useState<number>(1);
 
   const socketRef = useRef<any>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -23,8 +26,10 @@ const ChatBot = () => {
     // Server sends a message labeled 'response'
     socketRef.current.on("response", (response: any) => {
       setMessages((prev) => [...prev, { ...response, time: Date.now() }]);
+      setType(response.type);
+      setLabel(response.label);
       setTyping(false);
-    });    
+    });
 
     // Close socket connection on component unmount
     return () => {
@@ -45,16 +50,19 @@ const ChatBot = () => {
     if (text || message.trim()) {
       setTyping(true);
       const userMessage = {
+        id: questionId,
         sender: "user",
-        content_id: contentId,
+        type,
+        label,
         content: text || message,
+        options: [],
         time: Date.now(),
       };
       setMessages((prev) => [...prev, userMessage]);
 
       if (socketRef.current) {
         socketRef.current.emit("message", userMessage);
-        setContentId(prev => prev + 1);
+        setQuestionId((prev) => prev + 1);
       }
       setMessage("");
       return;

@@ -2,10 +2,11 @@ const { sendMessageToOpenAI } = require("./openai");
 const ChatSession = require("../model/ChatSession");
 const Message = require("../model/Message");
 const Petition = require("../model/Petition");
-const { saved_questions } = require("../lib/saved_questions");
-const { catalogCities } = require("../services/booking");
+const { basic_questions } = require("../lib/questions.js");
+const { catalogCities } = require("../api/petition.js");
 
 let botMessage = {};
+let botSelection = {};
 const newUser = {};
 
 const saveMessage = async (message, hash) => {
@@ -19,44 +20,41 @@ const saveMessage = async (message, hash) => {
 
 const initialAsking = async (userMessage, hash) => {
   // About the initial questions
-  switch (userMessage.content_id) {
+  switch (userMessage.id) {
     // 3 Initial Questions + (-2)
-    case -2:
+    case 1:
       newUser.userName = userMessage.content;
-      botMessage = saved_questions[2];
+      botMessage = basic_questions[2];
       botMessage = {
         ...botMessage,
         content: `Hi ${userMessage.content}, nice to meet you!\n${botMessage.content}`,
       };
       break;
 
-    case -1:
+    case 2:
       newUser.userEmail = userMessage.content;
-      botMessage = saved_questions[3];
+      botMessage = basic_questions[3];
       break;
 
-    case 0:
+    case 3:
       const all_previous_messages = await Message.find({
         sessionId: userMessage.content,
       });
-
       // New User
       if (all_previous_messages.length === 0) {
         newUser.sessionId = hash;
-        botMessage = saved_questions[5];
+        botMessage = basic_questions[5];
         botMessage = {
           ...botMessage,
           content: hash + "\n" + botMessage.content,
         };
-
         // Create NewChatSession
         const newChatSession = new ChatSession(newUser);
         await newChatSession.save();
       }
-
-      // If Session ID exists
+      // If Session ID already exists
       else {
-        botMessage = saved_questions[4];
+        botMessage = basic_questions[4];
       }
       break;
   }
@@ -85,29 +83,25 @@ const isPetition = (userMessage) => {
 
 const petitionAsking = async (userMessage, hash) => {
   try {
-    // const res = await catalogCities();
+    const res = await catalogCities();
 
-    // if (res.data.success) {
-    //   botMessage = {
-    //     sender:'bot',
-    //     type: 'select',
-    //     options: 
-    //   } 
-    // }
-    botMessage = saved_questions[6];
+    botSelection = {
+      ...saved_selections[1],
+      options: res.data,
+    };
+
     botMessage = {
-      ...botMessage,
+      ...basic_questions[6],
       content_id: userMessage.content_id,
     };
     await saveMessage(userMessage, hash);
     await saveMessage(botMessage, hash);
-    return botMessage;
+    return [botMessage, botSelection];
   } catch (e) {
     return {
       sender: "bot",
       content_id: 6,
-      content:
-        "Something went wrong while fetching cities data",
+      content: "Something went wrong while fetching cities data",
     };
   }
 };
@@ -125,7 +119,7 @@ const mainPetition = async (userMessage, hash) => {
   switch (userMessage.content_id) {
     case 1:
       new_petition.userCity = userMessage.content;
-      botMessage = saved_questions[7];
+      botMessage = basic_questions[7];
       botMessage = {
         ...botMessage,
         content_id: userMessage.content_id + 1,
@@ -134,7 +128,7 @@ const mainPetition = async (userMessage, hash) => {
       break;
     case 2:
       new_petition.branchOffice = userMessage.content;
-      botMessage = saved_questions[8];
+      botMessage = basic_questions[8];
       botMessage = {
         ...botMessage,
         content_id: userMessage.content_id + 1,
@@ -143,7 +137,7 @@ const mainPetition = async (userMessage, hash) => {
       break;
     case 3:
       new_petition.content = userMessage.content;
-      botMessage = saved_questions[9];
+      botMessage = basic_questions[9];
       botMessage = {
         ...botMessage,
         content_id: userMessage.content_id + 1,
@@ -165,9 +159,12 @@ const aiAnswer = async (userMessage, hash) => {
   // Query OpenAI for a response
   const aiMessage = await sendMessageToOpenAI(userMessage.content);
   botMessage = {
-    content_id: userMessage.content_id,
+    id: userMessage.id,
     sender: "bot",
+    type: "text",
+    label: "ai_answer",
     content: aiMessage,
+    options: []
   };
   // Add AI response to session history
   await saveMessage(botMessage, hash);

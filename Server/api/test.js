@@ -1,4 +1,4 @@
-const { catalogCities } = require("./booking");
+const { catalogCities } = require("./petition");
 
 const fetch = async () => {
   try {
