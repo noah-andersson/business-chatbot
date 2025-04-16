@@ -70,12 +70,20 @@ const basic_questions = [
   {
     id: 9,
     sender: "bot",
-    type: "input",
-    label: "all_done",
-    content: "Wonderful. \nour booking was successfully applied.",
+    type: "select",
+    label: "department_selection",
+    content: "What kind of service do you want?",
     options: [],
   },
-
+  {
+    id: 10,
+    sender: "bot",
+    type: "input",
+    label: "schedule_day",
+    content: "Select day you want to get service.",
+    options: [],
+  },
+  
 ];
 
 module.exports = { basic_questions };

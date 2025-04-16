@@ -5,7 +5,15 @@ const petitionSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  userEmail: {
+  phoneNumber: {
+    type: Number,
+    required: true
+  },
+  emailAddress: {
+    type: String,
+    required: true
+  },
+  gender: {
     type: String,
     required: true
   },
@@ -13,16 +21,19 @@ const petitionSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  branchOffice: {
-    type: String,
+  branchOfficeId: {
+    type: Number,
     required: true
   },
-  content: {
-    type: String,
+  departmentId: {
+    type: Number,
+    required: true
   },
-  timestamp: {
+  date: {
     type: Date,
-    default: Date.now
+  },
+  time: {
+    type: Date,
   }
 });
 

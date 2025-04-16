@@ -12,7 +12,7 @@ const {
   petitionAsking,
   mainPetition,
   aiAnswer,
-} = require("./utils/answer_user");
+} = require("./utils/communication");
 
 const app = express();
 dotenv.config();
@@ -71,9 +71,10 @@ io.on("connection", (socket) => {
         socket.emit("response", bot_question);
       } 
       else if ((userMessage.label === "is_booking" && userMessage.content === "yes") || is_petition ) {
-        // If user wants petition
+        // Petition Procedure
         is_petition = true;
-        bot_question = await mainPetition(userMessage, hash);
+        bot_question = await mainPetition(userMessage, hash);      
+        // if(petition is end) { is_petition = false }  
         socket.emit("response", bot_question);
       }
       else {
