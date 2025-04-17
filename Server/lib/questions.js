@@ -83,6 +83,22 @@ const basic_questions = [
     content: "Select day you want to get service.",
     options: [],
   },
+  {
+    id: 11,
+    sender: "bot",
+    type: "select",
+    label: "possible_time",
+    content: "Please select time you wanna get service",
+    options: [],
+  },
+  {
+    id: 12,
+    sender: "bot",
+    type: "input",
+    label: "success",
+    content: "Well done!",
+    options: [],
+  }
   
 ];
 

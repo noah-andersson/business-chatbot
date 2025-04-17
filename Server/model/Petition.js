@@ -7,7 +7,7 @@ const petitionSchema = new mongoose.Schema({
   },
   phoneNumber: {
     type: Number,
-    required: true
+    // required: true
   },
   emailAddress: {
     type: String,
@@ -15,7 +15,7 @@ const petitionSchema = new mongoose.Schema({
   },
   gender: {
     type: String,
-    required: true
+    // required: true
   },
   userCity: {
     type: String,
@@ -29,11 +29,11 @@ const petitionSchema = new mongoose.Schema({
     type: Number,
     required: true
   },
-  date: {
+  datePetition: {
     type: Date,
   },
-  time: {
-    type: Date,
+  timePetition: {
+    type: String,
   }
 });
 

@@ -40,7 +40,7 @@ const catalogBranchOffices = async () => {
 const catalogDepartments = async (branchOfficeId) => {
   try {
     const response = await axios.post(
-      `${API_URL}/catalog/departments`,
+      `https://devcoreservicesfna.customersolutions.click/api/v1/catalog/departments`,
       { branchOfficeId },
       AUTH_HEADER
     );
@@ -57,7 +57,7 @@ const findByServiceAndDay = async (
 ) => {
   try {
     const response = await axios.post(
-      `${API_URL}/schedule-checker/findByServiceAndDay`,
+      `https://devcoreservicesfna.customersolutions.click/api/v1/schedule-checker/findByServiceAndDay`,
       { datePetition, branchOfficeId, departmentId },
       AUTH_HEADER
     );

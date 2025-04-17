@@ -5,7 +5,7 @@ const chatSessionSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  userEmail: {
+  emailAddress: {
     type: String,
     required: true
   },

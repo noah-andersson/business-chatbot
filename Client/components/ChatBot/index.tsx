@@ -157,7 +157,7 @@ const ChatBot = () => {
               value={message}
               maxRows={6}
               className={styles.input}
-              disabled={typing || !open}
+              disabled={typing || !open || type === "select"}
               ref={inputRef}
             />
             <img

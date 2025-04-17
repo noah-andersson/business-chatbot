@@ -6,12 +6,15 @@ const { basic_questions } = require("../lib/questions.js");
 const {
   catalogCities,
   catalogBranchOffices,
+  catalogDepartments,
+  findByServiceAndDay,
 } = require("../api/petition.js");
 
-let botMessage = {};  // Bot message that ask and answer to user
+let botMessage = {}; // Bot message that ask and answer to user
+const new_petition = {}; // Petition Model Variable
 const new_chatsession = {}; // ChatSession Model Variable
-const office_items = [];  // Office items in city where user wants
-const department_items = [];  // Department items in office user selects
+const office_items = []; // Office items in city where user wants
+const department_items = []; // Department items in office user selects
 
 const saveMessage = async (message, hash) => {
   // Saving user/bot message to DB
@@ -28,6 +31,8 @@ const initialAsking = async (userMessage, hash) => {
   switch (userMessage.id) {
     case 1:
       new_chatsession.userName = userMessage.content;
+      new_petition.userName = userMessage.content;
+
       botMessage = basic_questions[2];
       botMessage = {
         ...botMessage,
@@ -36,7 +41,9 @@ const initialAsking = async (userMessage, hash) => {
       break;
 
     case 2:
-      new_chatsession.userEmail = userMessage.content;
+      new_chatsession.emailAddress = userMessage.content;
+      new_petition.emailAddress = userMessage.content;
+
       botMessage = basic_questions[3];
       break;
 
@@ -52,7 +59,7 @@ const initialAsking = async (userMessage, hash) => {
           ...botMessage,
           content: hash + "\n" + botMessage.content,
         };
-        // Create NewChatSession
+        // Create new ChatSession to DB
         const newChatSession = new ChatSession(new_chatsession);
         await newChatSession.save();
       }
@@ -114,6 +121,7 @@ const mainPetition = async (userMessage, hash) => {
       break;
 
     case "user_city":
+      new_petition.userCity = userMessage.content;
       const res_office = await catalogBranchOffices();
       const office_list = [];
       res_office.data
@@ -121,10 +129,10 @@ const mainPetition = async (userMessage, hash) => {
         .map((item) => {
           office_items.push(item);
         });
-      
+
       office_items.map((office) => {
         office_list.push({ label: office.name, value: office.name });
-      })
+      });
       botMessage = {
         ...basic_questions[8],
         options: office_list,
@@ -132,32 +140,89 @@ const mainPetition = async (userMessage, hash) => {
       break;
 
     case "branch_office":
+      new_petition.branchOfficeId = office_items.filter(
+        (item) => item.name === userMessage.content
+      )[0].id; // Get branchOfficeId
+      const res_department = await catalogDepartments(
+        new_petition.branchOfficeId
+      );
       const department_list = [];
-      office_items
-        .filter((item) => item.name === userMessage.content)[0]
-        .departments.map((item) => {
-          department_items.push(item);
-        }); 
-        
-      department_items.map((department) => {
-        department_list.push({ label: department.name, value: department.name });
-      })
+
+      res_department.data.map((department) => {
+        department_items.push(department);
+        department_list.push({
+          label: department.name,
+          value: department.name,
+        });
+      });
       botMessage = {
         ...basic_questions[9],
         options: department_list,
       };
       break;
-    
+
     case "department_selection":
-      botMessage = {
-        ...basic_questions[10],
+      new_petition.departmentId = department_items.filter(
+        (item) => item.name === userMessage.content
+      )[0].id;
+      botMessage = basic_questions[10];
+
+      break;
+
+    case "schedule_day":
+      new_petition.datePetition = userMessage.content;
+      const res_already_exist_time = await findByServiceAndDay(
+        new_petition.datePetition,
+        new_petition.branchOfficeId,
+        new_petition.departmentId
+      );
+      const time_list = [
+        "09:00",
+        "09:20",
+        "09:40",
+        "10:00",
+        "10:20",
+        "10:40",
+        "15:00",
+        "15:20",
+        "15:40",
+      ];
+      const possible_time = time_list.filter(
+        (item) => !res_already_exist_time.includes(item)
+      );
+
+      const possible_time_list = [];
+      if (possible_time.length !== 0 && res_already_exist_time.length !== 0) {
+        // If possible time exist for petition
+        possible_time.map((item) => {
+          possible_time_list.push({ label: item, value: item });
+        });
+        possible_time_list.push({ label: "other day", value: "other day" });
+        botMessage = {
+          ...basic_questions[11],
+          options: possible_time_list,
+        };
+      } else {
+        botMessage = {
+          ...basic_questions[10],
+          content:
+            "There are no possible petition time.\nPlease select other day.",
+        };
       }
       break;
-    case "schedule_day":
 
-      
-      break;
+    case "possible_time":
+      if (userMessage.content === "other day") {
+        botMessage = basic_questions[10];
+      } else {
+        new_petition.timePetition = userMessage.content;
+        botMessage = basic_questions[12];
+        // Create new petition to DB
+        const newPetition = new Petition(new_petition);
+        await newPetition.save();
+      }
   }
+
 
   await saveMessage(userMessage, hash);
   await saveMessage(botMessage, hash);
